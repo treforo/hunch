@@ -19,15 +19,29 @@ Submitted release/commit: [v1.0-submission / hash]
 | Tests | pytest | [ ] |
 | AI tools | Claude | Helped write code, docs and drafts (see AI assistance) |
 
-**Design decisions** (each with a one-line reason)
+**Design decisions**
+
 | Decision | Value | Reason |
 |---|---|---|
-| Feed size | 40 items, top 10 shown | [ ] |
-| Weights | [ ] | [ ] |
-| tau1 (Supported) | [ ] | [ ] |
-| tau2 (Partly) | [ ] | [ ] |
-| "Off" means | feed-wide mean | [ ] |
-| Seed | [ ] | [ ] |
+| Feed size | 40 items ranked, top 10 shown | Large enough for an item's rank to move a long way (e.g. #3 → #38), small enough to check by hand. |
+| Weights | topic affinity 0.35, followed account 0.25, popularity 0.15, recency 0.15, similar users 0.10 (sum = 1.0) | Personal signals outweigh crowd signals. These weights are invented for this simulation and are not Facebook's. |
+| tau1 (Supported) | Item drops out of the top 10, or falls by 5 or more places | A fall of 5 places is half the visible feed, which a person would notice. |
+| tau2 (Partly) | Falls by 2 to 4 places | A small shuffle that is more than noise but not a clear change. |
+| "Off" means | Feed-wide mean of that signal, not zero | Zero would make the item look penalised, so removing the signal would confound the test. The mean makes it neutral. |
+| Seed | 42 | A fixed seed makes the world, screenshots and results reproducible. |
+
+**Definitions**
+- Rank is defined as 1 to 40. The feed is ranks 1 to 10. Ties are broken by item id (lower id first).
+- before_rank and after_rank are the item's ranks before and after the signal is switched off.
+- fall = after_rank − before_rank (negative or zero means no fall).
+- dropped_out = before_rank ≤ 10 AND after_rank ≥ 11.
+- Guesses are only offered for items currently in the feed (ranks 1 to 10).
+
+**Verdict rules (checked in this order)**
+1. Guess is "other" → Not used.
+2. dropped_out OR fall ≥ 5 → Supported.
+3. fall 2 to 4 → Partly supported.
+4. fall ≤ 1 (including rises) → Not supported, naming the strongest driver.
 
 **Still undecided:** [ ]
 

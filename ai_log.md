@@ -1,5 +1,5 @@
 # AI log
 
-| Date | What I asked | What Claude produced | What I checked | What I changed or rejected |
+| Date | What I asked | What AI produced | What I checked | What I changed or rejected |
 |---|---|---|---|---|
-| [YYYY-MM-DD] | Stage 0: repo structure, CLAUDE.md, README skeleton, log template | [ ] | [ ] | [ ] |
+| [2026-11-16] | Stage 0: repo structure visualization, README skeleton, log template | [Any missing features] | [New Layout implemented] | [  ] |
