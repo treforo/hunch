@@ -80,4 +80,5 @@ No API keys are needed. [Update if this changes.]
 ## Additional files
 - `ai-log.md`: running log of prompts, checks and changes
 - `docs/`: diagram source, screenshots, mini check output
+- `docs/boundary_cases.md`: 13 hand-worked verdict cases, written before the verdict code. Used as the expected values for the verdict tests.
 - [ZIP files, if any, and how to use them]

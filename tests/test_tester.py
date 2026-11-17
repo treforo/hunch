@@ -1,0 +1,47 @@
+import pytest
+from hand_example import ITEMS, WEIGHTS
+import src.tester as tester  # imported as a module so pytest doesn't collect test_signal as a test
+
+
+def test_hand_example_before_and_after():
+    result = tester.test_signal(ITEMS, WEIGHTS, "E", "s1")
+    assert result["rank_before"] == 2
+    assert result["rank_after"] == 5
+    assert result["item_id"] == "E" and result["signal"] == "s1"
+
+
+def test_dropped_out_when_pushed_past_feed_size():
+    # E goes #2 -> #5. With a feed of 2 it was in and is now out.
+    assert tester.test_signal(ITEMS, WEIGHTS, "E", "s1", feed_size=2)["dropped_out"] is True
+    # With a feed of 5, #5 is still in.
+    assert tester.test_signal(ITEMS, WEIGHTS, "E", "s1", feed_size=5)["dropped_out"] is False
+
+
+def test_rank_exactly_at_feed_size_is_not_dropped():
+    # A goes #3 -> #4.
+    assert tester.test_signal(ITEMS, WEIGHTS, "A", "s1", feed_size=4)["dropped_out"] is False
+    assert tester.test_signal(ITEMS, WEIGHTS, "A", "s1", feed_size=3)["dropped_out"] is True
+
+
+def test_item_already_outside_feed_is_not_reported_as_dropped():
+    # D goes #5 -> #3; with feed_size=2 it was never in the feed.
+    assert tester.test_signal(ITEMS, WEIGHTS, "D", "s1", feed_size=2)["dropped_out"] is False
+
+
+def test_constant_signal_changes_nothing():
+    items = [
+        {"id": 1, "title": "", "signals": {"a": 0.5, "b": 0.9}},
+        {"id": 2, "title": "", "signals": {"a": 0.5, "b": 0.1}},
+    ]
+    result = tester.test_signal(items, {"a": 0.5, "b": 0.5}, 2, "a")
+    assert result["rank_before"] == result["rank_after"] == 2
+
+
+def test_unknown_item_raises():
+    with pytest.raises(ValueError):
+        tester.test_signal(ITEMS, WEIGHTS, "Z", "s1")
+
+
+def test_unknown_signal_raises():
+    with pytest.raises(ValueError):
+        tester.test_signal(ITEMS, WEIGHTS, "A", "nope")
