@@ -31,7 +31,7 @@ Submitted release/commit: [v1.0-submission / hash]
 | Seed | 42 | A fixed seed makes the world, screenshots and results reproducible. |
 
 **Definitions**
-- Rank is defined as 1 to 40. The feed is ranks 1 to 10. Ties are broken by item id (lower id first).
+- Rank is defined as 1 to 40. The feed is ranks 1 to 10. Ties are broken by item id (with lower id first).
 - before_rank and after_rank are the item's ranks before and after the signal is switched off.
 - fall = after_rank − before_rank (negative or zero means no fall).
 - dropped_out = before_rank ≤ 10 AND after_rank ≥ 11.
