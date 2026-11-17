@@ -7,6 +7,49 @@ Signal values are floats from 0 to 1.
 SORT_DECIMALS = 9  # scores closer than this are treated as equal when sorting
 
 
+def validate_items(items, weights, tolerance=1e-9):
+    """Raise ValueError if the data could make a ranking silently wrong.
+    rank() calls this every time, so tester.py and verdicts.py are covered too.
+    Checks: weights are non-empty, numeric, not negative and sum to 1; there is
+    at least one item; every item has an id and signals; ids are unique and all
+    the same type (so sorting by id works); each item has exactly the weighted
+    signals; every signal value is a number from 0 to 1.
+    """
+    if not weights:
+        raise ValueError("No weights")
+    for signal, weight in weights.items():
+        if isinstance(weight, bool) or not isinstance(weight, (int, float)) or not weight >= 0:
+            raise ValueError(f"Weight for {signal!r} must be a number that is not negative")
+    if abs(sum(weights.values()) - 1.0) > tolerance:
+        raise ValueError(f"Weights sum to {sum(weights.values())}, expected 1.0")
+
+    if not items:
+        raise ValueError("No items")
+
+    seen_ids = set()
+    id_type = None
+    for item in items:
+        if "id" not in item or "signals" not in item:
+            raise ValueError("Every item needs an 'id' and 'signals'")
+        item_id = item["id"]
+
+        if id_type is None:
+            id_type = type(item_id)
+        elif type(item_id) is not id_type:
+            raise ValueError("Item ids must all be the same type")
+        if item_id in seen_ids:
+            raise ValueError(f"Duplicate item id: {item_id!r}")
+        seen_ids.add(item_id)
+
+        if set(item["signals"]) != set(weights):
+            raise ValueError(f"Item {item_id!r} signals do not match the weights")
+        for signal, value in item["signals"].items():
+            # "not 0 <= value <= 1" also rejects NaN, which fails every comparison
+            if isinstance(value, bool) or not isinstance(value, (int, float)) \
+                    or not 0 <= value <= 1:
+                raise ValueError(f"Item {item_id!r}: {signal} = {value!r} is not a number from 0 to 1")
+
+
 def signal_mean(items, signal):
     """Feed-wide mean of one signal, over ALL items passed in (not just the top 10)."""
     return sum(item["signals"][signal] for item in items) / len(items)
@@ -26,7 +69,9 @@ def rank(items, weights, off=None):
       for sorting only, so float noise (~1e-16) can't break a tie that is a
       real tie on paper. The score returned is not rounded.
     - The input items are never modified.
+    - Raises ValueError for bad data (see validate_items) or an unknown `off`.
     """
+    validate_items(items, weights)
     if off is not None and off not in weights:
         raise ValueError(f"Unknown signal: {off!r}")
 
