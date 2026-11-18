@@ -61,9 +61,10 @@ def rank(items, weights, off=None):
     - breakdown maps each signal to its weighted contribution (weight * value),
       so the contributions add up to the score.
     - rank is 1-based: 1 is the top item.
-    - off: name of one signal to "switch off". Its value is replaced, for every
-      item, by that signal's feed-wide mean (not zero). The mean is computed
-      once, from the ORIGINAL values, before any replacement.
+    - off: a signal name, or a list of names, to "switch off". Each signal's value
+      is replaced, for every item, by that signal's own feed-wide mean (not
+      zero). Each mean is computed from the ORIGINAL values, before any
+      replacement. None or an empty list switches nothing off.
     - Ties: higher score first; equal scores are ordered by item id ascending,
       so the result is always the same. Scores are rounded to 9 decimal places
       for sorting only, so float noise (~1e-16) can't break a tie that is a
@@ -72,16 +73,19 @@ def rank(items, weights, off=None):
     - Raises ValueError for bad data (see validate_items) or an unknown `off`.
     """
     validate_items(items, weights)
-    if off is not None and off not in weights:
-        raise ValueError(f"Unknown signal: {off!r}")
+    off_signals = _as_list(off)
+    for signal in off_signals:
+        if signal not in weights:
+            raise ValueError(f"Unknown signal: {signal!r}")
 
-    off_value = signal_mean(items, off) if off is not None else None
+    # One mean per switched-off signal, all taken from the original values.
+    off_values = {signal: signal_mean(items, signal) for signal in off_signals}
 
     scored = []
     for item in items:
         breakdown = {}
         for signal, weight in weights.items():
-            value = off_value if signal == off else item["signals"][signal]
+            value = off_values[signal] if signal in off_values else item["signals"][signal]
             breakdown[signal] = weight * value
         scored.append({
             "id": item["id"],
@@ -94,3 +98,12 @@ def rank(items, weights, off=None):
     for position, row in enumerate(scored, start=1):
         row["rank"] = position
     return scored
+
+
+def _as_list(off):
+    """None -> [], "popularity" -> ["popularity"], a list stays a list."""
+    if off is None:
+        return []
+    if isinstance(off, str):
+        return [off]
+    return list(off)

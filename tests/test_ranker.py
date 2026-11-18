@@ -82,3 +82,35 @@ def test_real_difference_still_orders_correctly():
         {"id": 2, "title": "", "signals": {"s": 0.31}},
     ]
     assert [r["id"] for r in rank(items, {"s": 1.0})] == [2, 1]
+
+
+# ---- several signals off together ----
+# Hand working (weights 0.5 / 0.3 / 0.2). Means: s1 = 0.6, s2 = (0.2+0.9+0.5+0.7+0.1)/5 = 0.48.
+# With s1 and s2 both replaced, they add 0.5*0.6 + 0.3*0.48 = 0.30 + 0.144 = 0.444 to everyone,
+# so each score is 0.444 + 0.2*s3:
+#   A: 0.444 + 0.10 = 0.544   B: 0.444 + 0.02 = 0.464   C: 0.444 + 0.18 = 0.624
+#   D: 0.444 + 0.06 = 0.504   E: 0.444 + 0.04 = 0.484
+# Ranking: C, A, D, E, B
+def test_two_signals_off_matches_hand_example():
+    result = rank(ITEMS, WEIGHTS, off=["s1", "s2"])
+    assert [r["id"] for r in result] == ["C", "A", "D", "E", "B"]
+    expected = {"A": 0.544, "B": 0.464, "C": 0.624, "D": 0.504, "E": 0.484}
+    for row in result:
+        assert row["score"] == pytest.approx(expected[row["id"]])
+
+
+def test_list_of_one_matches_a_plain_name():
+    assert rank(ITEMS, WEIGHTS, off=["s1"]) == rank(ITEMS, WEIGHTS, off="s1")
+
+
+def test_none_and_empty_list_switch_nothing_off():
+    assert rank(ITEMS, WEIGHTS, off=[]) == rank(ITEMS, WEIGHTS)
+
+
+def test_repeated_name_in_list_is_harmless():
+    assert rank(ITEMS, WEIGHTS, off=["s1", "s1"]) == rank(ITEMS, WEIGHTS, off="s1")
+
+
+def test_unknown_name_in_list_raises():
+    with pytest.raises(ValueError):
+        rank(ITEMS, WEIGHTS, off=["s1", "nope"])

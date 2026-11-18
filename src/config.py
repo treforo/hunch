@@ -1,4 +1,4 @@
-"""Named constants for Hunch (Stage 1). tau1, tau2 and the seed are added in later stages."""
+"""Named constants for Hunch."""
 
 # The five invented signals, in a fixed order. They are NOT Facebook's.
 SIGNALS = ["topic_affinity", "followed_account", "popularity", "recency", "similar_users"]
@@ -26,3 +26,6 @@ NOT_SUPPORTED = "Not supported"
 NOT_USED = "Not used"
 
 OTHER_GUESS = "other"  # a guess that maps to none of the five signals, e.g. "a friend shared it"
+
+# Stage 3: seed for the world generator, so the world, screenshots and results are reproducible
+SEED = 42

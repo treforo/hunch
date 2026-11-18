@@ -1,4 +1,4 @@
-"""Counterfactual tester: would this item still rank as high without one signal?"""
+"""Counterfactual tester: would this item still rank as high without a signal?"""
 
 from src.config import FEED_SIZE
 from src.ranker import rank
@@ -14,17 +14,32 @@ def test_signal(items, weights, item_id, signal, feed_size=FEED_SIZE):
     """
     if signal not in weights:
         raise ValueError(f"Unknown signal: {signal!r}")
+    before, after, dropped = _compare(items, weights, item_id, signal, feed_size)
+    return {"item_id": item_id, "signal": signal, "rank_before": before,
+            "rank_after": after, "dropped_out": dropped}
 
+
+def test_signals(items, weights, item_id, signals, feed_size=FEED_SIZE):
+    """Like test_signal, but switches several signals off together.
+
+    Used to show what a single-signal test can miss. Returns
+    {"item_id", "signals", "rank_before", "rank_after", "dropped_out"}.
+    """
+    signals = list(signals)
+    if not signals:
+        raise ValueError("No signals given")
+    for signal in signals:
+        if signal not in weights:
+            raise ValueError(f"Unknown signal: {signal!r}")
+    before, after, dropped = _compare(items, weights, item_id, signals, feed_size)
+    return {"item_id": item_id, "signals": signals, "rank_before": before,
+            "rank_after": after, "dropped_out": dropped}
+
+
+def _compare(items, weights, item_id, off, feed_size):
     before = _rank_of(rank(items, weights), item_id)
-    after = _rank_of(rank(items, weights, off=signal), item_id)
-
-    return {
-        "item_id": item_id,
-        "signal": signal,
-        "rank_before": before,
-        "rank_after": after,
-        "dropped_out": before <= feed_size and after > feed_size,
-    }
+    after = _rank_of(rank(items, weights, off=off), item_id)
+    return before, after, before <= feed_size and after > feed_size
 
 
 def _rank_of(ranking, item_id):

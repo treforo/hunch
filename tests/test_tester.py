@@ -45,3 +45,35 @@ def test_unknown_item_raises():
 def test_unknown_signal_raises():
     with pytest.raises(ValueError):
         tester.test_signal(ITEMS, WEIGHTS, "A", "nope")
+
+
+# ---- several signals off together (hand working in test_ranker.py) ----
+# s1 and s2 off gives C, A, D, E, B. So E goes #2 -> #4, B goes #1 -> #5.
+def test_signals_hand_example():
+    result = tester.test_signals(ITEMS, WEIGHTS, "E", ["s1", "s2"])
+    assert result["rank_before"] == 2 and result["rank_after"] == 4
+    assert result["signals"] == ["s1", "s2"]
+    result = tester.test_signals(ITEMS, WEIGHTS, "B", ["s1", "s2"])
+    assert result["rank_before"] == 1 and result["rank_after"] == 5
+
+
+def test_signals_dropped_out_uses_feed_size():
+    # E goes #2 -> #4: with a feed of 3 it drops out, with a feed of 4 it does not.
+    assert tester.test_signals(ITEMS, WEIGHTS, "E", ["s1", "s2"], feed_size=3)["dropped_out"] is True
+    assert tester.test_signals(ITEMS, WEIGHTS, "E", ["s1", "s2"], feed_size=4)["dropped_out"] is False
+
+
+def test_signals_with_one_name_matches_test_signal():
+    one = tester.test_signal(ITEMS, WEIGHTS, "E", "s1")
+    many = tester.test_signals(ITEMS, WEIGHTS, "E", ["s1"])
+    assert (one["rank_before"], one["rank_after"]) == (many["rank_before"], many["rank_after"])
+
+
+def test_signals_empty_list_raises():
+    with pytest.raises(ValueError):
+        tester.test_signals(ITEMS, WEIGHTS, "E", [])
+
+
+def test_signals_unknown_signal_raises():
+    with pytest.raises(ValueError):
+        tester.test_signals(ITEMS, WEIGHTS, "E", ["s1", "nope"])
