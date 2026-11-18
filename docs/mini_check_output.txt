@@ -1,0 +1,32 @@
+Hunch mini check | seed 42 | 40 items | feed = top 10 | tau1 = 5, tau2 = 2
+
+item  planted cause                guess             ranks        expected         actual           match strongest driver
+--------------------------------------------------------------------------------------------------------------------------
+   6  popularity                   popularity        #6 -> #17    Supported        Supported        yes   -
+   6  popularity                   similar_users     #6 -> #6     Not supported    Not supported    yes   popularity (#6 -> #17)
+   7  topic_affinity               topic_affinity    #1 -> #17    Supported        Supported        yes   -
+   7  topic_affinity               followed_account  #1 -> #1     Not supported    Not supported    yes   topic_affinity (#1 -> #17)
+   9  social (a friend shared it)  other             -            Not used         Not used         yes   -
+   9  social (a friend shared it)  followed_account  #8 -> #8     Not supported    Not supported    yes   -
+  15  followed_account             followed_account  #3 -> #19    Supported        Supported        yes   -
+  15  followed_account             topic_affinity    #3 -> #1     Not supported    Not supported    yes   followed_account (#3 -> #19)
+  17  popularity                   popularity        #7 -> #18    Supported        Supported        yes   -
+  17  popularity                   similar_users     #7 -> #7     Not supported    Not supported    yes   popularity (#7 -> #18)
+  22  similar_users                similar_users     #10 -> #19   Supported        Supported        yes   -
+  22  similar_users                popularity        #10 -> #7    Not supported    Not supported    yes   similar_users (#10 -> #19)
+  27  topic_affinity               topic_affinity    #2 -> #18    Supported        Supported        yes   -
+  27  topic_affinity               followed_account  #2 -> #2     Not supported    Not supported    yes   topic_affinity (#2 -> #18)
+  32  followed_account             followed_account  #4 -> #20    Supported        Supported        yes   -
+  32  followed_account             topic_affinity    #4 -> #2     Not supported    Not supported    yes   followed_account (#4 -> #20)
+  39  recency                      recency           #5 -> #18    Supported        Supported        yes   -
+  39  recency                      popularity        #5 -> #5     Not supported    Not supported    yes   recency (#5 -> #18)
+
+Matches: 18 of 18
+
+Redundant pair: item 1, causes popularity and similar_users (both real causes)
+Ground truth from the design: each guess is true, so each should be Supported.
+
+switched off                 ranks        dropped out  verdict          ground truth
+popularity                   #9 -> #8     no           Not supported    Supported
+similar_users                #9 -> #9     no           Not supported    Supported
+popularity + similar_users   #9 -> #18     yes          (no single guess) meets the Supported rule: yes (fall 9, dropped out: yes)

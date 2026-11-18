@@ -1,0 +1,77 @@
+/* Hunch: plain CSS, no framework, no animation. Colour never carries meaning alone. */
+:root {
+  --bg: #eceff3; --surface: #fbfcfd; --ink: #18202e; --muted: #586174; --line: #d3d9e2;
+  --accent: #2540c7; --soft: #e3e8fb; --focus: #c2410c;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #12151c; --surface: #1a1e28; --ink: #e8ebf2; --muted: #9aa3b5; --line: #2b3140;
+          --accent: #8ea2ff; --soft: #232a45; --focus: #fdba74; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+       font: 1rem/1.55 "Avenir Next", "Segoe UI", system-ui, sans-serif; }
+.wrap { max-width: 44rem; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+
+header h1 { font-size: clamp(1.9rem, 5vw, 2.6rem); line-height: 1.1; letter-spacing: -0.02em;
+            font-weight: 750; margin: 0 0 0.9rem; }
+header p { max-width: 34rem; margin: 0 0 0.6rem; }
+.note { color: var(--muted); font-size: 0.9rem; }
+.status { color: var(--muted); }
+.error { border-left: 4px solid var(--ink); padding: 0.6rem 0.9rem; background: var(--surface); }
+
+main { margin-top: 1.6rem; }
+.bar { position: sticky; top: 0; z-index: 1; background: var(--surface); border-bottom: 1px solid var(--line); }
+.bar-in { max-width: 44rem; margin: 0 auto; padding: 0.7rem 1.25rem; display: flex; align-items: center; gap: 0.6rem; }
+.logo { width: 1.5rem; height: 1.5rem; border-radius: 7px; background: var(--accent); }
+.bar-note { margin-left: auto; color: var(--muted); font-size: 0.9rem; }
+
+.card { margin-top: 1rem; padding: 1rem 1.1rem 1.1rem; background: var(--surface);
+        border: 1px solid var(--line); border-radius: 14px; }
+.post-head { display: flex; align-items: center; gap: 0.75rem; }
+.avatar { flex: none; width: 2.6rem; height: 2.6rem; border-radius: 50%; display: grid; place-items: center;
+          background: var(--soft); color: var(--accent); font-weight: 700; font-size: 0.95rem; }
+.who { min-width: 0; }
+.author { font-weight: 650; line-height: 1.2; }
+.handle { color: var(--muted); font-size: 0.88rem; }
+.rank { margin-left: auto; text-align: right; font-size: 1.9rem; font-weight: 800; line-height: 1;
+        color: var(--accent); font-variant-numeric: tabular-nums; }
+.rank small { display: block; margin-top: 0.15rem; font-size: 0.75rem; font-weight: 500; color: var(--muted); }
+.caption { margin: 0.8rem 0; max-width: 36rem; }
+.photo { margin: 0; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
+.photo svg { display: block; width: 100%; height: 100%; }
+.p0 { fill: hsl(var(--h) 40% 86%); } .p1 { fill: hsl(var(--h) 38% 70%); }
+.p2 { fill: hsl(var(--h) 36% 56%); } .p3 { fill: hsl(var(--h) 55% 92%); }
+@media (prefers-color-scheme: dark) {
+  .p0 { fill: hsl(var(--h) 28% 24%); } .p1 { fill: hsl(var(--h) 30% 34%); }
+  .p2 { fill: hsl(var(--h) 30% 44%); } .p3 { fill: hsl(var(--h) 45% 70%); }
+}
+.actions { margin-top: 0.9rem; }
+
+button { font: inherit; cursor: pointer; color: var(--ink); background: transparent;
+         border: 1.5px solid var(--line); border-radius: 8px; padding: 0.4rem 0.85rem; }
+button:hover { border-color: var(--accent); }
+button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.toggle { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.toggle[aria-expanded="true"] { background: var(--soft); }
+
+.picker { margin-top: 0.8rem; }
+.picker p { margin: 0 0 0.5rem; font-weight: 600; }
+.choices { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.choices button[aria-pressed="true"] { background: var(--accent); color: var(--surface);
+                                       border-color: var(--accent); font-weight: 700; }
+
+.verdict { margin-top: 1rem; padding: 0.9rem 1rem; background: var(--soft);
+           border-left: 5px solid var(--accent); border-radius: 0 8px 8px 0; }
+.verdict h3 { margin: 0; font-size: 1.15rem; }
+.verdict .mark { display: inline-block; width: 1.4em; font-weight: 800; }
+.shift { margin: 0.35rem 0 0; font-size: 2.2rem; font-weight: 800; line-height: 1.1;
+         letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.shift small { display: block; font-size: 0.85rem; font-weight: 500; letter-spacing: 0;
+               color: var(--muted); }
+.verdict p { margin: 0.5rem 0 0; max-width: 34rem; }
+.driver { font-weight: 600; }
+
+@media (max-width: 30rem) {
+  .card { padding: 0.9rem; }
+  .rank { font-size: 1.6rem; }
+}
