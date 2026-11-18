@@ -75,3 +75,15 @@ button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
   .card { padding: 0.9rem; }
   .rank { font-size: 1.6rem; }
 }
+
+.switch { display: block; margin-top: 0.8rem; background: var(--accent); color: var(--surface);
+          border-color: var(--accent); font-weight: 650; }
+#banner:not(:empty) { margin-top: 1.4rem; }
+.banner { padding: 1rem 1.1rem; background: var(--surface); border: 1px solid var(--line);
+          border-left: 5px solid var(--accent); border-radius: 0 12px 12px 0; }
+.banner h2 { margin: 0 0 0.3rem; font-size: 1.15rem; }
+.banner h3 { margin: 1rem 0 0.3rem; font-size: 1rem; }
+.banner p { margin: 0 0 0.7rem; max-width: 34rem; }
+.reset { font-weight: 650; border-color: var(--accent); color: var(--accent); }
+.consistency { margin: 0; padding-left: 1.2rem; }
+.consistency li.changed { font-weight: 700; }

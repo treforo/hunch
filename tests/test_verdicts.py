@@ -145,3 +145,19 @@ def test_works_with_the_real_tester_output():
     result = tester.test_signal(ITEMS, WEIGHTS, "E", "s1")
     out = verdicts.get_verdict("s1", ITEM_E, result, ITEMS, WEIGHTS)
     assert out["verdict"] == P
+
+
+# ---- already_off ----
+# Hand working: with s1 already off, E is #5. Switching off s2 as well gives #4 (a rise).
+# With s1 off, switching off s3 leaves E at #5 (s3 off: B .65, D .59, C .53, A .44, E .41).
+# So no signal other than s1 pushes E down, and there is no strongest driver.
+def test_already_off_is_passed_to_the_driver_search():
+    out = verdicts.get_verdict("s2", ITEM_E, fake_result(5, 4, False, "E", "s2"),
+                               ITEMS, WEIGHTS, already_off=["s1"])
+    assert out["verdict"] == N
+    assert out["strongest_driver"] is None
+
+
+def test_default_already_off_changes_nothing():
+    same = verdicts.get_verdict("s2", ITEM_E, fake_result(2, 1, False, "E", "s2"), ITEMS, WEIGHTS)
+    assert same["strongest_driver"] == {"signal": "s1", "rank_before": 2, "rank_after": 5}

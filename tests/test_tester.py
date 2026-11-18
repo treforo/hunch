@@ -77,3 +77,26 @@ def test_signals_empty_list_raises():
 def test_signals_unknown_signal_raises():
     with pytest.raises(ValueError):
         tester.test_signals(ITEMS, WEIGHTS, "E", ["s1", "nope"])
+
+
+# ---- already_off: testing inside a feed that already has a signal off ----
+# Hand working (test_ranker.py): with s1 off the order is C, B, D, A, E, so E is #5.
+# With s1 and s2 both off the order is C, A, D, E, B, so E is #4.
+def test_already_off_hand_example():
+    result = tester.test_signal(ITEMS, WEIGHTS, "E", "s2", already_off=["s1"])
+    assert result["rank_before"] == 5 and result["rank_after"] == 4
+
+
+def test_already_off_accepts_a_single_name():
+    one = tester.test_signal(ITEMS, WEIGHTS, "E", "s2", already_off="s1")
+    assert (one["rank_before"], one["rank_after"]) == (5, 4)
+
+
+def test_switching_off_a_signal_that_is_already_off_raises():
+    with pytest.raises(ValueError):
+        tester.test_signal(ITEMS, WEIGHTS, "E", "s1", already_off=["s1"])
+
+
+def test_unknown_already_off_raises():
+    with pytest.raises(ValueError):
+        tester.test_signal(ITEMS, WEIGHTS, "E", "s2", already_off=["nope"])

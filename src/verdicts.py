@@ -13,13 +13,16 @@ from src.config import (TAU1, TAU2, SUPPORTED, PARTLY_SUPPORTED, NOT_SUPPORTED,
 from src.tester import test_signal
 
 
-def get_verdict(guess, item, test_result, items, weights, tau1=TAU1, tau2=TAU2):
+def get_verdict(guess, item, test_result, items, weights, tau1=TAU1, tau2=TAU2,
+                already_off=None):
     """Return {"verdict", "before_rank", "after_rank", "strongest_driver", "message"}.
 
     guess:       one of the signal names in `weights`, or "other".
     test_result: the dict from test_signal for this item and this guess
                  (not needed, so may be None, when the guess is "other").
     items, weights: needed to find the strongest driver (re-ranks once per signal).
+    already_off: signals already switched off (default none). The strongest-driver search
+                 then works inside that feed and skips those signals.
     """
     signals = list(weights)
 
@@ -54,7 +57,7 @@ def get_verdict(guess, item, test_result, items, weights, tau1=TAU1, tau2=TAU2):
                        f"from #{before} to #{after}.")
 
     # Rule 4
-    driver = _strongest_driver(item, items, weights)
+    driver = _strongest_driver(item, items, weights, already_off)
     message = (f"Not supported: without {_name(guess)} this item goes from "
                f"#{before} to #{after}, which is less than {tau2} places down.")
     if driver is None:
@@ -65,14 +68,16 @@ def get_verdict(guess, item, test_result, items, weights, tau1=TAU1, tau2=TAU2):
     return _result(NOT_SUPPORTED, before, after, driver, message)
 
 
-def _strongest_driver(item, items, weights):
+def _strongest_driver(item, items, weights, already_off=None):
     """The signal whose removal drops this item furthest, or None if none drops it.
     Ties go to the signal that comes first in `weights`, so the answer is deterministic.
     """
     best = None
     best_fall = 0  # a signal must push the item down by at least 1 place to count
     for signal in weights:
-        r = test_signal(items, weights, item["id"], signal)
+        if already_off and signal in already_off:
+            continue  # already off, so switching it off again changes nothing
+        r = test_signal(items, weights, item["id"], signal, already_off=already_off)
         fall = r["rank_after"] - r["rank_before"]
         if fall > best_fall:  # strict ">" keeps the earlier signal on a tie
             best_fall = fall

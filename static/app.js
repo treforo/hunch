@@ -47,7 +47,7 @@ async function loadFeed() {
     const response = await fetch("/feed");
     if (!response.ok) throw new Error("status " + response.status);
     const data = await response.json();
-    feed.replaceChildren(...data.feed.map(buildCard));
+    feed.replaceChildren(...data.feed.map((row) => buildCard(row, false)));
   } catch (err) {
     showError(feed, "The feed could not be loaded. Check that the server is running, then reload the page.");
   }
@@ -82,7 +82,13 @@ function buildPhoto(id) {
   return figure;
 }
 
-function buildCard(item) {
+// switched = true while a signal is switched off: no guess button, and a cue shows the old rank.
+function cue(item) {
+  if (item.previous_rank > 10) return "new in your top 10";
+  return item.previous_rank === item.rank ? "same rank" : `was #${item.previous_rank}`;
+}
+
+function buildCard(item, switched) {
   const card = el("article", "card");
   const author = AUTHORS[item.id % AUTHORS.length];
   const initials = author.split(" ").map((w) => w[0]).join("");
@@ -93,7 +99,7 @@ function buildCard(item) {
   const who = el("div", "who");
   who.append(el("div", "author", author), el("div", "handle", "@" + author.toLowerCase().replace(" ", "")));
   const rank = el("div", "rank", "#" + item.rank);
-  rank.append(el("small", "", "in your feed"));
+  rank.append(el("small", "", switched ? cue(item) : "in your feed"));
   head.append(avatar, who, rank);
 
   const toggle = el("button", "toggle", "Why am I seeing this?");
@@ -115,7 +121,7 @@ function buildCard(item) {
   card._close = () => { area.replaceChildren(); toggle.setAttribute("aria-expanded", "false"); };
 
   const actions = el("div", "actions");
-  actions.append(toggle);
+  if (!switched) actions.append(toggle);
   card.append(head, el("p", "caption", CAPTIONS[item.id % CAPTIONS.length]),
               buildPhoto(item.id), actions, area);
   return card;
@@ -176,6 +182,59 @@ function buildVerdict(result) {
   if (driver) {
     box.append(el("p", "driver",
       `Strongest driver: ${NAMES[driver.signal]} (#${driver.rank_before} → #${driver.rank_after})`));
+  }
+  if (result.guess !== "other") { // "something else" maps to no signal, so there is nothing to switch off
+    const sw = el("button", "switch", "Switch this signal off for my feed");
+    sw.type = "button";
+    sw.addEventListener("click", () => switchOff(result));
+    box.append(sw);
+  }
+  return box;
+}
+
+async function switchOff(result) {
+  const banner = document.getElementById("banner");
+  banner.replaceChildren(el("p", "status", "Re-ranking your feed…"));
+  try {
+    const response = await fetch("/switch_off", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ signal: result.guess, item_id: result.item_id }),
+    });
+    if (!response.ok) throw new Error("status " + response.status);
+    const data = await response.json();
+    openCard = null;
+    document.getElementById("feed").replaceChildren(...data.feed.map((row) => buildCard(row, true)));
+    banner.replaceChildren(buildBanner(data));
+    banner.scrollIntoView({ block: "start" });
+  } catch (err) {
+    showError(banner, "The feed could not be re-ranked. Try again, or reload the page.");
+  }
+}
+
+function buildBanner(data) {
+  const box = el("section", "banner");
+  box.append(el("h2", "", `Feed re-ranked with ${NAMES[data.signal]} switched off`));
+  box.append(el("p", "", "Each post shows where it was before. To test another theory, reset first."));
+  const reset = el("button", "reset", "Reset");
+  reset.type = "button";
+  reset.addEventListener("click", () => {
+    document.getElementById("banner").replaceChildren();
+    openCard = null;
+    loadFeed();
+  });
+  box.append(reset);
+
+  const check = data.consistency;
+  if (check) {
+    box.append(el("h3", "", "Do your other verdicts for this post change?"));
+    const list = el("ul", "consistency");
+    for (const row of check.rows) {
+      const flag = row.changed ? "changed" : "unchanged";
+      list.append(el("li", row.changed ? "changed" : "", `${NAMES[row.signal]}: ${row.before} → ${row.after} (${flag})`));
+    }
+    box.append(list);
+    box.append(el("p", "note", "This only compares the verdicts before and after. It does not show that any verdict is correct."));
   }
   return box;
 }

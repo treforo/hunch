@@ -61,3 +61,61 @@ def test_page_and_static_files_are_served():
     assert page.status_code == 200 and "text/html" in page.headers["content-type"]
     assert "Something else (e.g. a friend shared it)" in client.get("/static/app.js").text
     assert client.get("/static/style.css").status_code == 200
+
+
+# ---- /switch_off ----
+from src.config import SUPPORTED  # noqa: E402
+
+T_ITEMS = [i for i in ITEMS if i.get("planted_cause") == "topic_affinity"]
+OTHER_PLANTED = [i for i in ITEMS if "planted_cause" in i and i not in T_ITEMS]
+
+
+def switch(signal="topic_affinity", item_id=None):
+    body = {"signal": signal}
+    if item_id is not None:
+        body["item_id"] = item_id
+    return client.post("/switch_off", json=body)
+
+
+def test_switch_off_topic_removes_the_topic_items_and_keeps_the_other_planted_ones():
+    # From the design: the two topic-cause items fall to the all-average level; the other 8 planted
+    # items keep their cause and stay in the top 10.
+    ids = {r["id"] for r in switch().json()["feed"]}
+    assert not ids & {i["id"] for i in T_ITEMS}
+    assert {i["id"] for i in OTHER_PLANTED} <= ids
+
+
+def test_switch_off_returns_ten_rows_in_ranker_order_with_previous_rank():
+    body = switch("recency").json()
+    expected = [r["id"] for r in rank(ITEMS, WEIGHTS, off="recency")][:FEED_SIZE]
+    assert [r["id"] for r in body["feed"]] == expected and body["signal"] == "recency"
+    original = {r["id"]: r["rank"] for r in rank(ITEMS, WEIGHTS)}
+    for row in body["feed"]:
+        assert row["previous_rank"] == original[row["id"]]
+
+
+def test_feed_is_unchanged_after_a_switch_off():
+    before = client.get("/feed").json()
+    switch()
+    assert client.get("/feed").json() == before  # the server keeps no switched-off state
+
+
+def test_consistency_is_null_without_an_item_and_present_with_one():
+    assert switch().json()["consistency"] is None
+    out = switch("topic_affinity", T_ITEMS[0]["id"]).json()["consistency"]
+    assert [r["signal"] for r in out["rows"]] == [s for s in WEIGHTS if s != "topic_affinity"]
+    assert out["item_id"] == T_ITEMS[0]["id"]
+
+
+def test_switch_off_errors():
+    assert switch("other").status_code == 400
+    assert switch("populrity").status_code == 400
+    assert switch("recency", 9999).status_code == 404
+    outside = next(i for i in ITEMS if i["design_role"] == "background")
+    assert switch("recency", outside["id"]).status_code == 400
+    assert client.post("/switch_off", json={}).status_code == 422
+
+
+def test_page_has_the_switch_off_and_reset_controls():
+    js = client.get("/static/app.js").text
+    assert "Switch this signal off for my feed" in js and "Reset" in js
