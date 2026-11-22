@@ -172,8 +172,11 @@ function buildVerdict(result) {
   box.append(heading);
 
   if (result.before_rank !== null) {
-    const shift = el("p", "shift", `#${result.before_rank} → #${result.after_rank}`);
-    shift.append(el("small", "", "rank before and after switching this signal off"));
+    const same = result.before_rank === result.after_rank;
+    const shift = el("p", "shift", same ? "Rank stays the same" : `#${result.before_rank} → #${result.after_rank}`);
+    shift.append(el("small", "", same
+      ? `still #${result.before_rank} with this signal switched off`
+      : "rank before and after switching this signal off"));
     box.append(shift);
   }
   box.append(el("p", "", result.message));

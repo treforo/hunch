@@ -58,8 +58,14 @@ def get_verdict(guess, item, test_result, items, weights, tau1=TAU1, tau2=TAU2,
 
     # Rule 4
     driver = _strongest_driver(item, items, weights, already_off)
-    message = (f"Not supported: without {_name(guess)} this item goes from "
-               f"#{before} to #{after}, which is less than {tau2} places down.")
+    if after == before:
+        message = f"Not supported: switching {_name(guess)} off leaves this item at #{before}."
+    elif after < before:
+        message = (f"Not supported: switching {_name(guess)} off moves this item up "
+                   f"from #{before} to #{after}.")
+    else:
+        message = (f"Not supported: without {_name(guess)} this item goes from "
+                   f"#{before} to #{after}, which is less than {tau2} places down.")
     if driver is None:
         message += " Switching off any single signal does not push it down."
     else:
