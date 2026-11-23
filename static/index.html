@@ -7,15 +7,51 @@
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <div class="bar"><div class="bar-in"><span class="logo" aria-hidden="true"></span><strong>Hunch</strong><span class="bar-note">Simulated feed</span></div></div>
-  <div class="wrap">
-    <header>
-      <h1>Why is this in my feed?</h1>
-      <p>Pick a post and say why you think it is there. Hunch tests your theory by switching that signal off and re-ranking the feed.</p>
-      <p class="note">This is a simulated feed with five invented signals. Nothing here comes from a real platform.</p>
-    </header>
-    <div id="banner" role="status"></div>
-    <main id="feed"><p class="status">Loading your feed…</p></main>
+  <div class="bar"><div class="bar-in">
+    <span class="logo" aria-hidden="true"></span><strong>Hunch</strong>
+    <input class="search" type="search" placeholder="Search" readonly title="Not part of this simulation" aria-label="Search (not available in this simulation)">
+    <span class="bar-note">Simulated feed</span>
+    <span class="avatar me" aria-hidden="true">S</span>
+  </div></div>
+
+  <div class="layout">
+    <nav class="side side-left" aria-label="Main">
+      <ul>
+        <li><button type="button" class="active" aria-current="page" disabled><span aria-hidden="true">⌂</span> Home</button></li>
+        <li><button type="button" disabled title="Not part of this simulation"><span aria-hidden="true">◎</span> Explore</button></li>
+        <li><button type="button" disabled title="Not part of this simulation"><span aria-hidden="true">✉</span> Messages</button></li>
+        <li><button type="button" disabled title="Not part of this simulation"><span aria-hidden="true">♢</span> Notifications</button></li>
+        <li><button type="button" disabled title="Not part of this simulation"><span aria-hidden="true">☺</span> Profile</button></li>
+        <li><button type="button" disabled title="Not part of this simulation"><span aria-hidden="true">⚙</span> Settings</button></li>
+      </ul>
+    </nav>
+
+    <div class="wrap">
+      <header>
+        <h1>Your feed</h1>
+        <p>Pick a post and ask why you are seeing it. Hunch tests your theory by switching that signal off and re-ranking the feed.</p>
+        <p class="note">This is a simulated feed with five invented signals. Nothing here comes from a real platform.</p>
+      </header>
+      <div class="composer">
+        <span class="avatar me" aria-hidden="true">S</span>
+        <input type="text" placeholder="What's on your mind?" readonly title="Not part of this simulation" aria-label="Write a post (not available in this simulation)">
+        <button type="button" disabled title="Not part of this simulation">Post</button>
+      </div>
+      <div id="banner" role="status"></div>
+      <main id="feed"><p class="status">Loading your feed…</p></main>
+      <p class="foot">Search, navigation, posting, like, comment and share are visual placeholders and do nothing. Names, captions and pictures are invented.</p>
+    </div>
+
+    <aside class="side side-right">
+      <section class="panel profile">
+        <span class="avatar me" aria-hidden="true">S</span>
+        <div><strong>Sam</strong><div class="handle">@sam, simulated user</div></div>
+      </section>
+      <section class="panel">
+        <h2>About this feed</h2>
+        <p>Forty invented posts are ranked by five invented signals. The top ten are your feed.</p>
+      </section>
+    </aside>
   </div>
   <script src="/static/app.js"></script>
 </body>

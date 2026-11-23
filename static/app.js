@@ -11,21 +11,94 @@ const NAMES = Object.fromEntries(GUESSES);
 // Each verdict is a word plus a symbol, so colour is never the only signal.
 const MARKS = { "Supported": "✓", "Partly supported": "◐", "Not supported": "✕", "Not used": "○" };
 
-// Cosmetic placeholders only: names, captions and pictures are picked from the item id.
+// Cosmetic placeholders only. Every one of the 40 items gets its own name, caption and picture
+// (ids 1 to 40 map one to one), picked from the item id.
 // They play no part in ranking and carry no hint of why a post is shown
 // (no likes, times, follow labels or topics, which would imply a signal).
-const AUTHORS = ["Maya Ortiz", "Dev Patel", "Lena Fischer", "Tomas Reyes", "Aiko Tanaka",
-                 "Noah Bennett", "Zara Hussain", "Ola Nkemelu", "Iris Lindqvist", "Sam Whitfield"];
-const CAPTIONS = ["Finally finished the thing I have been putting off all week.",
-                  "Sunday walk, no plan, no phone for an hour.",
-                  "Found this on the way home and had to share it.",
-                  "Small win today. Taking it.",
-                  "Same view, different light. Never gets old.",
-                  "Cleared out the shelf and found a few surprises.",
-                  "Quiet morning before everything starts.",
-                  "Not sure how I feel about this one. Thoughts?",
-                  "Back from the weekend with far too many photos.",
-                  "Something I made this week. Be kind."];
+const AUTHORS = [
+  "Maya Ortiz",
+  "Dev Patel",
+  "Lena Fischer",
+  "Tomas Reyes",
+  "Aiko Tanaka",
+  "Noah Bennett",
+  "Zara Hussain",
+  "Ola Nkemelu",
+  "Iris Lindqvist",
+  "Sam Whitfield",
+  "Priya Raman",
+  "Mateo Silva",
+  "Hana Kobayashi",
+  "Jonas Weber",
+  "Amara Okafor",
+  "Leo Marchetti",
+  "Sofia Almeida",
+  "Kofi Mensah",
+  "Elena Petrova",
+  "Ravi Menon",
+  "Chloe Dubois",
+  "Idris Bakr",
+  "Freya Nilsen",
+  "Diego Santana",
+  "Mei Zhou",
+  "Tariq Haddad",
+  "Nora Lindgren",
+  "Caleb Foster",
+  "Yara Costa",
+  "Anders Holm",
+  "Lucia Moretti",
+  "Kwame Boateng",
+  "Ingrid Sorensen",
+  "Omar Farouk",
+  "Tessa Whitmore",
+  "Bruno Carvalho",
+  "Alma Reyes",
+  "Hugo Lambert",
+  "Nadia Volkova",
+  "Felix Ahn",
+];
+const CAPTIONS = [
+  "Finally finished the thing I had been putting off.",
+  "Not sure how I feel about this one. Thoughts?",
+  "Found this on the way home and had to share it.",
+  "Small win. Taking it.",
+  "Same view, different light. Never gets old.",
+  "Cleared out the shelf and found a few surprises.",
+  "Back with far too many photos and no regrets.",
+  "Some days you just need a long walk and no plan.",
+  "I keep coming back to this one.",
+  "Did not expect it to turn out like this.",
+  "Tried something unfamiliar and I am still deciding if it worked.",
+  "A rare moment of quiet. Enjoying every second.",
+  "This corner of the world has my whole heart.",
+  "Told myself one more try. It was worth it.",
+  "Some things look better when you stop rushing.",
+  "Learning as I go, and that is fine.",
+  "Packed too much, forgot the one thing that mattered.",
+  "It took three attempts but here we are.",
+  "Look closer, there is a detail I almost missed.",
+  "Making room for the things that matter.",
+  "Proof that the long way round is sometimes best.",
+  "Nothing fancy, just exactly what I needed.",
+  "Can you spot what changed?",
+  "A bit of order in a messy stretch.",
+  "I was told it could not be done. Here it is.",
+  "Pausing to take this in before moving on.",
+  "Slowly getting the hang of it.",
+  "One of those views that makes you stop talking.",
+  "The best part was the unplanned detour.",
+  "Honest opinions welcome, even the blunt kind.",
+  "Sharing this because it made me smile.",
+  "Every little piece fell into place.",
+  "Still figuring out what to call this.",
+  "A tiny project, finally done.",
+  "Plans changed and this was the happy accident.",
+  "Whoever left this here, thank you.",
+  "Almost did not post this. Glad I did.",
+  "Weathered, worn and somehow perfect.",
+  "A reminder to look up every now and then.",
+  "Ending on a good note.",
+];
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 let openCard = null; // only one picker is open at a time
@@ -69,14 +142,18 @@ function buildPhoto(id) {
     svg.append(node);
   };
   shape("rect", { width: 400, height: 225 }, "p0");
-  if (id % 2 === 0) { // hills and a sun
+  if (id % 3 === 0) { // hills and a sun
     shape("circle", { cx: 290, cy: 70, r: 34 }, "p3");
     shape("polygon", { points: "0,225 0,150 110,90 220,160 320,110 400,170 400,225" }, "p1");
     shape("polygon", { points: "0,225 0,190 140,150 260,200 400,160 400,225" }, "p2");
-  } else { // overlapping circles
+  } else if (id % 3 === 1) { // overlapping circles
     shape("circle", { cx: 130, cy: 120, r: 80 }, "p1");
     shape("circle", { cx: 230, cy: 105, r: 62 }, "p2");
     shape("circle", { cx: 300, cy: 150, r: 40 }, "p3");
+  } else { // blocks of different heights
+    shape("rect", { x: 60, y: 90, width: 90, height: 135 }, "p1");
+    shape("rect", { x: 170, y: 50, width: 80, height: 175 }, "p2");
+    shape("rect", { x: 270, y: 110, width: 70, height: 115 }, "p3");
   }
   figure.append(svg);
   return figure;
@@ -97,7 +174,7 @@ function buildCard(item, switched) {
   const avatar = el("div", "avatar", initials);
   avatar.setAttribute("aria-hidden", "true");
   const who = el("div", "who");
-  who.append(el("div", "author", author), el("div", "handle", "@" + author.toLowerCase().replace(" ", "")));
+  who.append(el("div", "author", author), el("div", "handle", "@" + author.toLowerCase().replace(/[^a-z]/g, "")));
   const rank = el("div", "rank", "#" + item.rank);
   rank.append(el("small", "", switched ? cue(item) : "in your feed"));
   head.append(avatar, who, rank);
@@ -121,6 +198,13 @@ function buildCard(item, switched) {
   card._close = () => { area.replaceChildren(); toggle.setAttribute("aria-expanded", "false"); };
 
   const actions = el("div", "actions");
+  for (const [glyph, label] of [["♡", "Like"], ["✎", "Comment"], ["↗", "Share"]]) {
+    const button = el("button", "react", `${glyph} ${label}`); // visual placeholder: does nothing
+    button.type = "button";
+    button.disabled = true;
+    button.title = "Not part of this simulation";
+    actions.append(button);
+  }
   if (!switched) actions.append(toggle);
   card.append(head, el("p", "caption", CAPTIONS[item.id % CAPTIONS.length]),
               buildPhoto(item.id), actions, area);
