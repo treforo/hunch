@@ -1,102 +1,71 @@
 # Hunch: testing your own theory of why a post appears
 
 IIS Assignment 2 · Treasure Maduforo · 2735196
-README prose word count: about 1340 (code blocks and setup commands excluded)
-Repository: [link] · Submitted release/commit: [v1.0-submission tag or commit hash, added at freeze]
+README word count: ~1000
+
 
 ## Project status
-Stages 0 to 4 are finished. The switch-off control and consistency check (Stage 5) are not started.
+Hunch is a simulated social feed. The person picks a theory ("I'm seeing this because of X"), and Hunch switches that signal off, re-ranks the feed and returns a verdict with the numbers.
 
-- **Made so far:** a simulated feed where five invented signals rank 40 items; a tester that switches a signal off and re-ranks; a verdict engine that judges a guess from the rank change; a seeded world with hand-planted causes; a mini check that compares the verdicts with the planted causes.
-- **Implemented:** ranker with input validation (`src/ranker.py`); counterfactual tester for one signal or several together (`src/tester.py`); verdict engine with Supported, Partly supported, Not supported and Not used (`src/verdicts.py`); mini check (`scripts/mini_check.py`); 141 pytest tests.
-- **Interface (implemented):** thin FastAPI API (`src/api.py`: `GET /feed`, `POST /guess`) and a single-page front end in plain HTML/CSS/JS (`static/`) with a feed of cards, a guess picker (five signals plus "Something else") and a verdict panel. Verdicts are shown as words with a symbol, not colour alone. Not yet checked by a person in a browser: [your result].
-- **Simulated:** the world (`src/world.py`): 40 items, 10 planted causes, one user profile, seed 42. Signals, weights and causes are invented, not Facebook's.
-- **Planned, not built:** switch-off control and consistency check (Stage 5, may be cut to planned); scenario script `scripts/scenarios.py`, screenshots and diagram (Stages 6 and 7); LLM parsing of free-text guesses (no model chosen).
+- **Implemented:** ranker with input validation; tester that switches one or several signals off; verdict engine (Supported, Partly supported, Not supported, Not used); consistency check; FastAPI API (`/feed`, `/guess`, `/switch_off`); single-page UI with a guess picker, verdict panel, switch-off control and Reset; mini check; 161 pytest tests.
+- **Simulated:** the world (`src/world.py`): 40 items, 10 planted causes, one user profile, seed 42. The five signals, weights and causes are invented, not Facebook's.
+- **Visual placeholders that do nothing:** search, side navigation, composer, Like, Comment, Share. Names, captions and pictures are invented and play no part in ranking.
+- **Planned, not built:** LLM parsing of free-text guesses (no code, no model chosen); `scripts/scenarios.py` (storyboard frames were taken from the running app instead).
+- **Not done:** no participants and no evaluation beyond the mini check.
 
 ## Technology stack
-| Part | Technology | What it does | Status |
-|---|---|---|---|
-| Language | Python 3.10+ (developed on 3.15.2, Windows) | Ranker, tester, verdicts, world | Implemented |
-| Tests | pytest | Unit tests, hand-worked examples | Implemented |
-| Backend | FastAPI, uvicorn | Serves the feed and verdicts; httpx for API tests | Implemented |
-| Front end | Plain HTML/CSS/JS | Feed cards, guess picker, verdict panel | Implemented |
-| LLM | None | Would parse free-text guesses | Planned, no model chosen |
-| AI tool | Claude (chat) | Helped write code, tests and drafts | See AI assistance |
-
-**Design decisions**
-
-| Decision | Value | Reason |
+| Part | Technology | What it does |
 |---|---|---|
-| Feed size | 40 items ranked, top 10 shown | Large enough for an item's rank to move a long way (e.g. #3 → #38), small enough to check by hand. |
-| Weights | topic affinity 0.35, followed account 0.25, popularity 0.15, recency 0.15, similar users 0.10 | Personal signals outweigh crowd signals. Invented for this simulation, not Facebook's. |
-| "Off" means | Feed-wide mean of that signal, not zero | Keeps displayed scores at a typical level instead of lowering them. Any constant gives the same ranking, including zero, so this affects the scores shown, not the verdicts. |
-| Verdict is based on | Rank change, not score change | Rank is what the person sees, and a large score contribution may not change the rank. |
-| tau1 (Supported) | Drops out of the top 10, or falls 5 or more places | A fall of 5 is half the visible feed, which a person would notice. |
-| tau2 (Partly) | Falls 2 to 4 places | More than a small shuffle, but not a clear change. |
-| Drop-out rule | Dropping out is Supported even for a fall of 1 or 2 | The question is whether the item would still appear; see `docs/boundary_cases.md` (cases 10 and 11). |
-| Ties | Lower item id first; scores within 1e-9 count as equal | Makes the ranking deterministic and stops float noise breaking ties. |
-| Input checks | `rank` rejects bad data (values outside 0 to 1, duplicate ids, weights not summing to 1, and so on) | Those errors would otherwise change rankings with no warning. |
-| Seed | 42 | Reproducible world, screenshots and results. |
-| World design | 10 planted items, 8 fillers, 22 background | 8 single-cause items, 1 social item and 1 redundant pair fill the feed; the fillers sit just above the average score. |
+| Language | Python 3.10+ (developed on 3.15.2, Windows) | Ranker, tester, verdicts, world |
+| API | FastAPI, uvicorn | Serves the feed, verdicts and the page |
+| Front end | Plain HTML, CSS and JavaScript | Feed cards, picker, verdict panel |
+| Tests | pytest, httpx | Unit and API tests |
+| AI tool | Claude | Helped write tests and some code |
 
-**Definitions**
-- Rank runs 1 to 40. The feed is ranks 1 to 10.
-- fall = rank after − rank before. dropped_out = rank before ≤ 10 and rank after ≥ 11.
-- Guesses are only offered for items in the feed (enforced by the Stage 4 UI, not by the engine).
+**Undecided:** which model would parse free-text guesses (planned only).
 
-**Verdict rules (implemented, checked in this order)**
-1. Guess is "other" → Not used.
-2. dropped_out or fall ≥ 5 → Supported.
-3. fall 2 to 4 → Partly supported.
-4. fall ≤ 1 (including rises) → Not supported, naming the strongest driver.
 
-**Still undecided:** whether the consistency check survives the Day 3 cut line.
 
 ## Running or inspecting the work
-Requires Python 3.10 or newer. No API keys are needed.
+(Requires Python 3.10 or newer. No API keys are needed.)
 
 ```bash
 python -m venv venv
-venv\Scripts\activate              # Mac/Linux: source venv/bin/activate
+venv\Scripts\activate              # for Mac/Linux: source venv/bin/activate
 python -m pip install -r requirements.txt
-python -m pytest                   # 141 tests
+python -m pytest                   # includes 161 tests
 python scripts/mini_check.py       # prints the mini check tables
-python -m uvicorn src.api:app      # starts the app; open http://127.0.0.1:8000
+python -m uvicorn src.api:app      # open the UI at http://127.0.0.1:8000
 ```
 
-Stop the server with Ctrl+C. Not built yet: `scripts/scenarios.py`. To inspect without running anything, read `docs/mini_check_output.txt`.
+- Stop the app with Ctrl+C.
+- Item numbers in this README come from seed 42.
 
-## Known limits
-- The world is simulated and defines the truth. There are no participants, so nothing is claimed about how people respond or how Facebook works.
-- The mini check matches by construction: the data was built so the verdicts should follow. It shows that the design and the engine agree, not that the engine is accurate in general.
-- The design check holds for seed 42. About a quarter of other seeds (54 of 200 tried) fail it, because the background score cap sits close to the average score. The generator raises an error for those.
-- The redundant pair is a rank effect: each signal contributes separately to a weighted sum, so a single-signal test can miss a combined effect among neighbouring items. The pair item sits at rank 9, near the cutoff.
-- Partly supported and items near the cutoff are tested only by unit tests, not planted in the world.
-- Only one guess per test. Free-text guesses, interacting signals and a person's own data are not handled.
 
 ## Development record
-| Stage | What changed | Why | What I checked | Commit |
-|---|---|---|---|---|
-| 0 Repo and context | Repo structure, CLAUDE.md rules, README skeleton, AI log | Keep scope small and stop unbuilt work being described as built, which the marking penalises | [your check] | [link] |
-| 1 Ranker and tester | `rank` with per-signal breakdown, `test_signal`, hand example. A planned test (mean and zero give different rankings) turned out impossible and was replaced by a score-difference test. Float-tie rounding added. | Breakdown makes each score explainable; any constant shifts all scores equally; float noise could break ties. | Hand example against my paper calculation: [your result and who was right]. 18 tests pass; the tie test fails if the rounding is removed. | [link] |
-| 1b Validation | `validate_items`, called by every `rank` | Duplicate ids, out-of-range values and bad weights gave wrong answers silently. | 86 tests pass; 21 fail if the validation call is removed. | [link] |
-| 2 Verdict engine | `src/verdicts.py`, tau1 and tau2 in `config.py`, strongest driver | Verdicts from rank change; unknown guesses and mismatched results raise errors instead of looking like answers. | 12 boundary cases from `docs/boundary_cases.md` copied in as fixed numbers; changing `>=` to `>` at either threshold fails tests; 42 tests pass. | [link] |
-| 3 World and mini check | `src/world.py`, `scripts/mini_check.py`, `off` accepts several signals | Known planted causes without participants; the pair test needs two signals off at once. | `check_design` tests the data without calling the tester; seed 42 passes; 18 of 18 rows match; flipping one expected verdict gives 17 of 18; 115 tests pass. | [link] |
-| 4 API and UI | `src/api.py`, `static/`, `tests/test_api.py` | Thin API over the existing engine; plain front end so the interaction can be shown and screenshotted. The API refuses items outside the feed because the engine does not. | API tests take expected verdicts from the world's design table; live server answered `/feed`, `/guess` and `/`; 141 tests pass. [Your hand run of all three scenarios in the browser.] | [link] |
+
+| Stage | What changed and why | What I checked | Commit |
+|---|---|---|---|
+| 0 Setup | Structure for Repo, README and AI log | Ensuring scope adheres with project requirements | [5563d57](https://github.com/treforo/hunch/commit/5563d57cf1212268c03011c859ee19fa39ecf5ba), [fd34925](https://github.com/treforo/hunch/commit/fd3492506f73172ddde874f20e290da65292ab60), [d5d471e](https://github.com/treforo/hunch/commit/d5d471e3ff1f89f092da2373edade5f4996c3d9b) |
+| 1 Ranker and tester | Weighted-sum `rank` with breakdown, `test_signal`, hand example. A planned mean-vs-zero test was impossible and became a score test. Rounding added so float noise cannot break ties. | Hand example against my paper calculation: Matched my results. The tie test fails without the rounding | [ebedb55](https://github.com/treforo/hunch/commit/ebedb55a3873d865a47b7c9245994292766611df), [848915e](https://github.com/treforo/hunch/commit/848915e51e52e0f58c03eeb516634022b254ae0c) |
+| 2 Verdict engine | Verdicts from rank change, with tau1 and tau2 in `config.py`. Validation added to `rank`, because bad data changed rankings silently. Both were committed together. | 12 boundary cases from my `docs/boundary_cases.md` hard-coded; changing `>=` to `>` fails tests; 21 tests fail without the validation call | [52454c3](https://github.com/treforo/hunch/commit/52454c396dc933836169a06f666bf9cfbe05ec76) |
+| 3 World and mini check | Seeded world with planted causes, `off` taking several signals for the redundant pair, `scripts/mini_check.py` | `check_design` tests the data without the tester. 18 of 18 rows match; flipping one expected verdict gives 17 of 18 | [495ec63](https://github.com/treforo/hunch/commit/495ec6303a4ab281f951000c771ff85893da1fdc) |
+| 4 API and UI | FastAPI, plain-JS page. The API refuses items outside the feed, because the engine does not. Later commits restyled the page as a social feed with unique placeholder content. | API tests take expected verdicts from the design table.| [3dce83b](https://github.com/treforo/hunch/commit/3dce83b4258f1aacb39b143ca9ce44bcc62a408f)|
+| 5 Switch-off | `POST /switch_off`, `already_off` option, consistency check, Reset, old-rank cues. The server keeps no state. | Earlier tests unchanged; a verdict flip worked by hand for the consistency test | [553e10d](https://github.com/treforo/hunch/commit/553e10dd3b0a3837fa299a449297b45fee9be1fa) |
+
 
 ## AI assistance
-- **Tool:** Claude (chat).
-- **What I asked for:** the repo structure and documents; the ranker and tester; the verdict engine; the seeded world and mini check; explanations of edge cases; Windows setup help. Plans were requested before code each time.
-- **Checked or changed:**
-  - A test Claude planned was impossible, because replacing a signal with any constant leaves the order unchanged. It was replaced and the README reason for "off = mean" was corrected.
-  - I decided to leave the world validator until Stage 3, then to enforce validation inside `rank` so the tester and verdict engine are covered too.
-  - The mini check can fail: flipping one expected verdict in a temporary copy gave 17 of 18.
-  - [your own change, from `ai-log.md`]
-- **Not AI:** `docs/boundary_cases.md` was written by me before the verdict code. The tests copy its expected values.
+- **Tool:** Claude
+
+| Date | What I asked | What AI produced | What I checked | What I changed or rejected |
+|---|---|---|---|---|
+| 2026-11-16 |repo structure, README skeleton, log template | Folder layout, README skeleton, log template.  | Whether the structure covered the brief's requirements. | Decided to cut the extra evaluation from the report scope. |
+| 2026-11-17 | plan for the ranker and counterfactual tester, then the code | Plan with assumptions, then drafts for `config.py`, `ranker.py`, `tester.py` |  Ran pytest. Compared tests with my paper calculation. | Its own planned test (mean vs zero giving different rankings) was impossible, because a constant shift does not change the order. I confirmed this by hand. The test now compares scores, and my report argument for "off = mean" changed. |
+| 2026-11-17 | Setup help: Python, git, venv on Windows | Commands and fixes. | Ran them myself. | `pip.exe` was blocked by Application Control, so I use `python -m pip` and `python -m pytest`. Declined the long-path and PATH prompts in the Python installer. |
+| 2026-11-17 | verdict engine | `src/verdicts.py` | The expected values for the boundary tests come from my own `docs/boundary_cases.md`, written before the code. Changing `>=` to `>` at either threshold fails 3 tests. Item E's driver worked on paper matches. 21 tests fail if the validation call is removed. | Kept the drop-out rule as written (Option A, boundary cases 10 and 11). Raised errors for unknown guesses and mismatched results instead of returning a verdict. Enforced validation inside `rank`, so the tester and verdict engine are covered too. |
+| 2026-11-18 | plan for FastAPI and single-page UI |  `static/` files and `tests/test_api.py` (141 tests). | The install check for FastAPI passed on my machine. The live server answered `/feed`, `/guess` and the page. | Chose FastAPI over Flask after the install check. The API refuses items outside the feed, because the engine does not. |
+| 2026-11-18 | switch-off control and consistency check |  `src/consistency.py`, an `already_off` option on the tester and verdicts | A verdict flip for the consistency test worked by hand. Live run for item 7: similar users changed from Not supported to Partly supported. My browser check: Reset and switch-off work. | Approved a server that keeps no state, and hiding the guess buttons while a signal is off.|
 
 ## Additional files
-- `ai-log.md`: running log of prompts, checks and changes.
-- `CLAUDE.md`: rules given to Claude for this project.
-- `docs/boundary_cases.md`: 13 hand-worked verdict cases.
-- `docs/mini_check_output.txt`: output of `scripts/mini_check.py` on seed 42.
-- Screenshots and the system diagram will be added to `docs/` in Stages 4 to 7. No ZIP files.
+- `docs/`: `boundary_cases.md`, `mini_check_output.txt`, 
+
