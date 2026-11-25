@@ -27,18 +27,34 @@ Hunch is a simulated social feed. The person picks a theory ("I'm seeing this be
 
 
 ## Running or inspecting the work
-(Requires Python 3.10 or newer. No API keys are needed.)
 
-```bash
+Requires Python 3.10 or newer. No API keys are needed. Run these in a terminal (Command Prompt/PowerShell on Windows, Terminal on Mac/Linux).
+
+```
+git clone https://github.com/treforo/hunch.git
+cd hunch
 python -m venv venv
-venv\Scripts\activate              # for Mac/Linux: source venv/bin/activate
-python -m pip install -r requirements.txt
-python -m pytest                   # includes 161 tests
-python scripts/mini_check.py       # prints the mini check tables
-python -m uvicorn src.api:app      # open the UI at http://127.0.0.1:8000
 ```
 
-- Stop the app with Ctrl+C.
+Activate the environment:
+
+```
+venv\Scripts\activate          # Windows
+source venv/bin/activate       # Mac/Linux
+```
+
+Then install and run:
+
+```
+python -m pip install -r requirements.txt
+python -m pytest                   # runs the tests
+python scripts/mini_check.py       # prints the mini check tables
+python -m uvicorn src.api:app      # starts the app
+```
+
+Open http://127.0.0.1:8000 in a browser to use the interface. Stop the app with Ctrl+C.
+
+- On Mac/Linux, use `python3` in place of `python` if `python` is not found.
 - Item numbers in this README come from seed 42.
 
 
@@ -48,7 +64,7 @@ python -m uvicorn src.api:app      # open the UI at http://127.0.0.1:8000
 |---|---|---|---|
 | 0 Setup | Structure for Repo, README and AI log | Ensuring scope adheres with project requirements | [5563d57](https://github.com/treforo/hunch/commit/5563d57cf1212268c03011c859ee19fa39ecf5ba), [fd34925](https://github.com/treforo/hunch/commit/fd3492506f73172ddde874f20e290da65292ab60), [d5d471e](https://github.com/treforo/hunch/commit/d5d471e3ff1f89f092da2373edade5f4996c3d9b) |
 | 1 Ranker and tester | Weighted-sum `rank` with breakdown, `test_signal`, hand example. A planned mean-vs-zero test was impossible and became a score test. Rounding added so float noise cannot break ties. | Hand example against my paper calculation: Matched my results. The tie test fails without the rounding | [ebedb55](https://github.com/treforo/hunch/commit/ebedb55a3873d865a47b7c9245994292766611df), [848915e](https://github.com/treforo/hunch/commit/848915e51e52e0f58c03eeb516634022b254ae0c) |
-| 2 Verdict engine | Verdicts from rank change, with tau1 and tau2 in `config.py`. Validation added to `rank`, because bad data changed rankings silently. Both were committed together. | 12 boundary cases from my `docs/boundary_cases.md` hard-coded; changing `>=` to `>` fails tests; 21 tests fail without the validation call | [52454c3](https://github.com/treforo/hunch/commit/52454c396dc933836169a06f666bf9cfbe05ec76) |
+| 2 Verdict engine | Verdicts from rank change, with tau1 and tau2 in `config.py`. Validation added to `rank`, because bad data changed rankings silently. Both were committed together. | 13 boundary cases from my `docs/boundary_cases.md` hard-coded; changing `>=` to `>` fails tests; 21 tests fail without the validation call | [52454c3](https://github.com/treforo/hunch/commit/52454c396dc933836169a06f666bf9cfbe05ec76) |
 | 3 World and mini check | Seeded world with planted causes, `off` taking several signals for the redundant pair, `scripts/mini_check.py` | `check_design` tests the data without the tester. 18 of 18 rows match; flipping one expected verdict gives 17 of 18 | [495ec63](https://github.com/treforo/hunch/commit/495ec6303a4ab281f951000c771ff85893da1fdc) |
 | 4 API and UI | FastAPI, plain-JS page. The API refuses items outside the feed, because the engine does not. Later commits restyled the page as a social feed with unique placeholder content. | API tests take expected verdicts from the design table.| [3dce83b](https://github.com/treforo/hunch/commit/3dce83b4258f1aacb39b143ca9ce44bcc62a408f)|
 | 5 Switch-off | `POST /switch_off`, `already_off` option, consistency check, Reset, old-rank cues. The server keeps no state. | Earlier tests unchanged; a verdict flip worked by hand for the consistency test | [553e10d](https://github.com/treforo/hunch/commit/553e10dd3b0a3837fa299a449297b45fee9be1fa) |
@@ -67,5 +83,5 @@ python -m uvicorn src.api:app      # open the UI at http://127.0.0.1:8000
 | 2026-11-18 | switch-off control and consistency check |  `src/consistency.py`, an `already_off` option on the tester and verdicts | A verdict flip for the consistency test worked by hand. Live run for item 7: similar users changed from Not supported to Partly supported. My browser check: Reset and switch-off work. | Approved a server that keeps no state, and hiding the guess buttons while a signal is off.|
 
 ## Additional files
-- `docs/`: `boundary_cases.md`, `mini_check_output.txt`, 
+- `docs/`: `boundary_cases.md`, `mini_check_output.txt`
 
