@@ -1,4 +1,4 @@
-# Hunch: testing your own theory of why a post appears
+# Hunch: Explaining and Controlling Your Feed
 
 IIS Assignment 2 · Treasure Maduforo · 2735196
 · README word count: ~1000
